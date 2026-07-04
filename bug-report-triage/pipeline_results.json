@@ -1,0 +1,50 @@
+{
+  "stage1": {
+    "bug_summary": "Importing a CSV file larger than 500 MB causes the application to freeze and crash.",
+    "steps_to_reproduce": [
+      "Import a CSV file larger than 500 MB"
+    ],
+    "expected_behavior": "The file should be imported successfully.",
+    "actual_behavior": "The application hangs indefinitely and eventually crashes.",
+    "error_messages": [
+      "java.lang.OutOfMemoryError: Java heap space"
+    ],
+    "affected_component": "com.app.importer.ImportService",
+    "missing_information": [
+      "CSV file format details",
+      "System specifications",
+      "Java version",
+      "Memory allocation settings"
+    ]
+  },
+  "stage2": {
+    "likely_root_cause": "The application is running out of memory while processing large CSV files due to insufficient heap space allocation.",
+    "severity": "High",
+    "confidence": "85%",
+    "reasoning": [
+      "The application hangs and crashes when importing large files, indicating a resource management issue.",
+      "The error message 'java.lang.OutOfMemoryError: Java heap space' suggests that the Java Virtual Machine (JVM) does not have enough memory allocated to handle the size of the CSV file being imported.",
+      "The affected component, 'com.app.importer.ImportService', is responsible for handling file imports, and it likely lacks the necessary optimizations or configurations to process large files efficiently."
+    ]
+  },
+  "stage3": {
+    "developer_summary": "The application crashes when importing CSV files larger than 500 MB due to insufficient heap space allocation. This issue needs immediate attention to prevent application failures during large file imports.",
+    "recommended_fix": "Increase the Java heap space allocation in the application's configuration to accommodate larger file imports, and consider implementing streaming or chunking mechanisms to handle large files more efficiently.",
+    "next_debugging_steps": [
+      "Check the current Java heap space allocation settings in the application's configuration.",
+      "Increase the heap size by modifying the JVM options (e.g., -Xmx2g for 2 GB).",
+      "Test the application with a CSV file larger than 500 MB to verify if the issue is resolved.",
+      "Review and optimize the 'com.app.importer.ImportService' for better memory management during file imports."
+    ]
+  },
+  "stage4": {
+    "quality_score": 9,
+    "issues_found": [
+      "Missing information regarding the CSV file format details could affect the debugging process.",
+      "The severity is marked as 'High', but it could be argued that it should be 'Critical' given that the application crashes.",
+      "The recommendation to implement streaming or chunking mechanisms is somewhat vague; more specific strategies could enhance clarity."
+    ],
+    "needs_revision": true,
+    "revised_summary": "The application crashes when importing CSV files larger than 500 MB due to insufficient heap space allocation. Immediate action is required to increase heap space and optimize the import service for better handling of large files to prevent application failures."
+  }
+}
