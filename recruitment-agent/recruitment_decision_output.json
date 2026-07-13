@@ -1,0 +1,209 @@
+{
+  "shortlist": [
+    {
+      "name": "Priya Sharma",
+      "decision": "INTERVIEW",
+      "score": 87.0,
+      "justification": "Candidate scored 87.0% overall.\nStrongest area: ML Framework Experience (5/5) - evidence: ML Frameworks found: tensorflow, scikit-learn, pytorch; Experience: \"Designed and deployed a real-time recommendation system using TensorFlow serving ",
+      "scorecard": {
+        "candidate_name": "Priya Sharma",
+        "criteria_scores": [
+          {
+            "criterion": "Python Proficiency",
+            "weight": 0.15,
+            "score": 3,
+            "evidence": "Skills list: Languages: Python (Expert), SQL (Advanced), Java (Intermediate); Experience: \"Built automated data preprocessing pipelines using Python (pandas, NumPy) reducing data cleaning time by 40%\"",
+            "max_score": 5
+          },
+          {
+            "criterion": "ML Framework Experience",
+            "weight": 0.2,
+            "score": 5,
+            "evidence": "ML Frameworks found: tensorflow, scikit-learn, pytorch; Experience: \"Designed and deployed a real-time recommendation system using TensorFlow serving 500K+ users, improving click-through rate by 23%\"; Experience: \"Developed a sentiment analysis model using PyTorch and BERT achieving 89% accuracy on customer feedback data\"",
+            "max_score": 5
+          },
+          {
+            "criterion": "SQL & Data Skills",
+            "weight": 0.15,
+            "score": 5,
+            "evidence": "SQL skills: languages: python (expert), sql (advanced), java (intermediate), databases: postgresql, mysql, mongodb; Data skills: data tools: pandas, numpy, apache spark, airflow; Experience: \"Built automated data preprocessing pipelines using Python (pandas, NumPy) reducing data cleaning time by 40%\"; Experience: \"Implemented feature engineering workflows processing 10M+ records daily using SQL and Apache Spark\"",
+            "max_score": 5
+          },
+          {
+            "criterion": "ML/AI Engineering Experience",
+            "weight": 0.25,
+            "score": 5,
+            "evidence": "AI/ML mentions found: machine learning, ml model, ai engineer, recommendation system, sentiment analysis; Experience: \"Designed and deployed a real-time recommendation system using TensorFlow serving 500K+ users, improving click-through rate by 23%\"; Experience: \"Developed a sentiment analysis model using PyTorch and BERT achieving 89% accuracy on customer feedback data\"",
+            "max_score": 5
+          },
+          {
+            "criterion": "Education & Background",
+            "weight": 0.1,
+            "score": 4,
+            "evidence": "Education: Bachelor of Technology in Computer Science and Engineering at Indian Institute of Technology, Delhi | 2020 - 2024, CGPA: 8.7",
+            "max_score": 5
+          },
+          {
+            "criterion": "Version Control & Engineering Practices",
+            "weight": 0.1,
+            "score": 3,
+            "evidence": "Git found in skills; Experience: \"Wrote comprehensive unit tests achieving 92% code coverage\"; Experience: \"Conducted code reviews for 3 junior developers\"; Project \"End-to-End ML Pipeline for House Price Prediction\" uses CI/Git; Project \"NLP Chatbot for Customer Support\" uses CI/Git",
+            "max_score": 5
+          },
+          {
+            "criterion": "Cloud & Deployment (Bonus)",
+            "weight": 0.05,
+            "score": 4,
+            "evidence": "Cloud/DevOps skills: Cloud & DevOps: AWS (S3, EC2, SageMaker), Docker, Git, GitHub Actions; Experience: \"Assisted in migrating ML models from Jupyter notebooks to production using Docker containers\"; Project \"End-to-End ML Pipeline for House Price Prediction\" uses deployment; Project \"NLP Chatbot for Customer Support\" uses aws",
+            "max_score": 5
+          }
+        ],
+        "total_weighted_score": 4.35,
+        "max_possible_score": 5.0,
+        "normalized_score": 87.0
+      }
+    },
+    {
+      "name": "Rahul Verma",
+      "decision": "HOLD",
+      "score": 62.0,
+      "justification": "Candidate scored 62.0% overall.\nStrongest area: Python Proficiency (4/5) - evidence: Skills list: Languages: JavaScript (Advanced), Python (Intermediate), HTML/CSS (Advanced); Project: \"Customer Churn Prediction (Bootcamp Project)\" use\nWeakest area: ML Framework Experience (2/5) - evidence: ML Frameworks found: scikit-learn",
+      "scorecard": {
+        "candidate_name": "Rahul Verma",
+        "criteria_scores": [
+          {
+            "criterion": "Python Proficiency",
+            "weight": 0.15,
+            "score": 4,
+            "evidence": "Skills list: Languages: JavaScript (Advanced), Python (Intermediate), HTML/CSS (Advanced); Project: \"Customer Churn Prediction (Bootcamp Project)\" uses Python; Project: \"Movie Recommendation System (Bootcamp Project)\" uses Python",
+            "max_score": 5
+          },
+          {
+            "criterion": "ML Framework Experience",
+            "weight": 0.2,
+            "score": 2,
+            "evidence": "ML Frameworks found: scikit-learn",
+            "max_score": 5
+          },
+          {
+            "criterion": "SQL & Data Skills",
+            "weight": 0.15,
+            "score": 4,
+            "evidence": "SQL skills: databases: mysql, mongodb; Data skills: data tools: pandas (intermediate), numpy (intermediate), jupyter; Experience: \"Worked with MySQL databases for data storage and retrieval\"; Experience: \"Assisted in database management using MySQL\"",
+            "max_score": 5
+          },
+          {
+            "criterion": "ML/AI Engineering Experience",
+            "weight": 0.25,
+            "score": 3,
+            "evidence": "AI/ML mentions found: recommendation system; Project \"Movie Recommendation System (Bootcamp Project)\": Implemented collaborative filtering using surprise library in Python\nBuilt a sim",
+            "max_score": 5
+          },
+          {
+            "criterion": "Education & Background",
+            "weight": 0.1,
+            "score": 3,
+            "evidence": "Education: Bachelor of Engineering in Mechanical Engineering at Pune University | 2017 - 2021, CGPA: 7.2; Education: Data Science Bootcamp at UpGrad | Jan 2024 - June 2024",
+            "max_score": 5
+          },
+          {
+            "criterion": "Version Control & Engineering Practices",
+            "weight": 0.1,
+            "score": 3,
+            "evidence": "Git found in skills; Experience: \"Collaborated with cross-functional teams using Git and Jira\"; Project \"Customer Churn Prediction (Bootcamp Project)\" uses CI/Git",
+            "max_score": 5
+          },
+          {
+            "criterion": "Cloud & Deployment (Bonus)",
+            "weight": 0.05,
+            "score": 3,
+            "evidence": "Cloud/DevOps skills: Other: Git, Docker (Basic), REST APIs",
+            "max_score": 5
+          }
+        ],
+        "total_weighted_score": 3.1,
+        "max_possible_score": 5.0,
+        "normalized_score": 62.0
+      }
+    },
+    {
+      "name": "Alex Johnson",
+      "decision": "REJECT",
+      "score": 29.0,
+      "justification": "Candidate scored 29.0% overall.\nStrongest area: SQL & Data Skills (3/5) - evidence: Experience: \"Maintaining client relationship database in Excel\"\nWeakest area: Cloud & Deployment (Bonus) (0/5) - evidence: No cloud/deployment evidence found\nNOTE: Resume contained prompt injection attempt which was detected and blocked.",
+      "scorecard": {
+        "candidate_name": "Alex Johnson",
+        "criteria_scores": [
+          {
+            "criterion": "Python Proficiency",
+            "weight": 0.15,
+            "score": 2,
+            "evidence": "Skills list: Languages: Basic Python (self-taught, no",
+            "max_score": 5
+          },
+          {
+            "criterion": "ML Framework Experience",
+            "weight": 0.2,
+            "score": 0,
+            "evidence": "No ML framework evidence found in resume",
+            "max_score": 5
+          },
+          {
+            "criterion": "SQL & Data Skills",
+            "weight": 0.15,
+            "score": 3,
+            "evidence": "Experience: \"Maintaining client relationship database in Excel\"",
+            "max_score": 5
+          },
+          {
+            "criterion": "ML/AI Engineering Experience",
+            "weight": 0.25,
+            "score": 2,
+            "evidence": "No AI/ML engineering experience found",
+            "max_score": 5
+          },
+          {
+            "criterion": "Education & Background",
+            "weight": 0.1,
+            "score": 2,
+            "evidence": "Education: Bachelor of Business Administration at University of Mumbai | 2020 - 2024, CGPA: 6.5",
+            "max_score": 5
+          },
+          {
+            "criterion": "Version Control & Engineering Practices",
+            "weight": 0.1,
+            "score": 0,
+            "evidence": "No version control or engineering practice evidence found",
+            "max_score": 5
+          },
+          {
+            "criterion": "Cloud & Deployment (Bonus)",
+            "weight": 0.05,
+            "score": 0,
+            "evidence": "No cloud/deployment evidence found",
+            "max_score": 5
+          }
+        ],
+        "total_weighted_score": 1.45,
+        "max_possible_score": 5.0,
+        "normalized_score": 29.0
+      }
+    }
+  ],
+  "actions": [
+    {
+      "candidate": "Priya Sharma",
+      "proposed_slot": {
+        "day": "Monday",
+        "start_time": "14:00",
+        "end_time": "15:00"
+      },
+      "status": "APPROVED"
+    }
+  ],
+  "trajectory_summary": {
+    "total_steps": 14,
+    "status": "COMPLETED",
+    "injection_attempts_blocked": 1
+  }
+}

@@ -1,0 +1,17 @@
+[
+  {
+    "name": "Priya Sharma",
+    "score": 87.0,
+    "injection": false
+  },
+  {
+    "name": "Rahul Verma",
+    "score": 62.0,
+    "injection": false
+  },
+  {
+    "name": "Alex Johnson",
+    "score": 29.0,
+    "injection": true
+  }
+]

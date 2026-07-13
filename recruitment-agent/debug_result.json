@@ -1,0 +1,135 @@
+{
+  "status": "WAITING_APPROVAL",
+  "step_count": 13,
+  "error": null,
+  "shortlist_count": 3,
+  "actions_count": 1,
+  "trajectory_count": 13,
+  "shortlist": [
+    {
+      "name": "Priya Sharma",
+      "decision": "INTERVIEW",
+      "score": 87.0,
+      "justification": "Candidate scored 87.0% overall.\nStrongest area: ML Framework Experience (5/5) - evidence: ML Frameworks found: pytorch, scikit-learn, tensorflow; Experience: \"Designed and deployed a real-time recommendation system using TensorFlow serving "
+    },
+    {
+      "name": "Rahul Verma",
+      "decision": "HOLD",
+      "score": 62.0,
+      "justification": "Candidate scored 62.0% overall.\nStrongest area: Python Proficiency (4/5) - evidence: Skills list: Languages: JavaScript (Advanced), Python (Intermediate), HTML/CSS (Advanced); Project: \"Customer Churn Prediction (Bootcamp Project)\" use\nWeakest area: ML Framework Experience (2/5) - evidence: ML Frameworks found: scikit-learn"
+    },
+    {
+      "name": "Alex Johnson",
+      "decision": "REJECT",
+      "score": 29.0,
+      "justification": "Candidate scored 29.0% overall.\nStrongest area: SQL & Data Skills (3/5) - evidence: Experience: \"Maintaining client relationship database in Excel\"\nWeakest area: Cloud & Deployment (Bonus) (0/5) - evidence: No cloud/deployment evidence found\nNOTE: Resume contained prompt injection attempt which was detected and blocked."
+    }
+  ],
+  "trajectory": [
+    {
+      "step": 1,
+      "thought": "Initializing recruitment agent with job description and candidate list",
+      "action": "initialize",
+      "decision": "PROCEED",
+      "observation": "Agent initialized with 3 candidates. Rubric built with 7 criteria."
+    },
+    {
+      "step": 2,
+      "thought": "Parsing resume for candidate: Priya Sharma",
+      "action": "parse_resume",
+      "decision": "PROCEED",
+      "observation": "Parsed profile for Priya Sharma: 2.0 years exp, 2 jobs, 2 projects"
+    },
+    {
+      "step": 3,
+      "thought": "Evaluating candidate Priya Sharma against the scoring rubric",
+      "action": "score_candidate",
+      "decision": "PROCEED",
+      "observation": "Scorecard for Priya Sharma: Total=4.35/5.0, Normalized=87.0%\n  Python Proficiency: 3/5 (w:0.15) - Evidence: Skills list: Languages: Python (Expert), SQL (Advanced), Java (Intermediate); Experience: \"B"
+    },
+    {
+      "step": 4,
+      "thought": "Checking if there are more candidates to process after Priya Sharma",
+      "action": "check_next",
+      "decision": "PROCEED_NEXT",
+      "observation": "Moving to next candidate (index 1: Rahul Verma)"
+    },
+    {
+      "step": 5,
+      "thought": "Parsing resume for candidate: Rahul Verma",
+      "action": "parse_resume",
+      "decision": "PROCEED",
+      "observation": "Parsed profile for Rahul Verma: 2.0 years exp, 2 jobs, 2 projects"
+    },
+    {
+      "step": 6,
+      "thought": "Evaluating candidate Rahul Verma against the scoring rubric",
+      "action": "score_candidate",
+      "decision": "PROCEED",
+      "observation": "Scorecard for Rahul Verma: Total=3.1/5.0, Normalized=62.0%\n  Python Proficiency: 4/5 (w:0.15) - Evidence: Skills list: Languages: JavaScript (Advanced), Python (Intermediate), HTML/CSS (Advanced); Pro"
+    },
+    {
+      "step": 7,
+      "thought": "Checking if there are more candidates to process after Rahul Verma",
+      "action": "check_next",
+      "decision": "PROCEED_NEXT",
+      "observation": "Moving to next candidate (index 2: Alex Johnson)"
+    },
+    {
+      "step": 8,
+      "thought": "Parsing resume for candidate: Alex Johnson",
+      "action": "parse_resume",
+      "decision": "PROCEED",
+      "observation": "Parsed profile for Alex Johnson: 2.0 years exp, 2 jobs, 1 projects [PROMPT INJECTION DETECTED - instructions in resume ignored]"
+    },
+    {
+      "step": 9,
+      "thought": "Evaluating candidate Alex Johnson against the scoring rubric",
+      "action": "score_candidate",
+      "decision": "PROCEED",
+      "observation": "Scorecard for Alex Johnson: Total=1.45/5.0, Normalized=29.0%\n  Python Proficiency: 2/5 (w:0.15) - Evidence: Skills list: Languages: Basic Python (self-taught, no...\n  ML Framework Experience: 0/5 (w:0"
+    },
+    {
+      "step": 10,
+      "thought": "Checking if there are more candidates to process after Alex Johnson",
+      "action": "check_next",
+      "decision": "ALL_EVALUATED",
+      "observation": "All candidates evaluated. Moving to final ranking."
+    },
+    {
+      "step": 11,
+      "thought": "Ranking all candidates and producing final shortlist",
+      "action": "rank_shortlist",
+      "decision": "SHORTLIST_PRODUCED",
+      "observation": "RANKED SHORTLIST:\n  #1: Priya Sharma - Score: 87.0% - Decision: INTERVIEW\n  #2: Rahul Verma - Score: 62.0% - Decision: HOLD\n  #3: Alex Johnson - Score: 29.0% - Decision: REJECT [INJECTION ATTEMPT BLOC"
+    },
+    {
+      "step": 12,
+      "thought": "Checking availability for INTERVIEW candidates",
+      "action": "check_availability",
+      "decision": "AVAILABILITY_CHECKED",
+      "observation": "Checking availability for interview candidates:\n  Priya Sharma: 16 slots available. First: Monday 15:00-16:00\n  -> Proposed interview: Priya Sharma on Monday 15:00-16:00 [STATUS: PENDING_APPROVAL]"
+    },
+    {
+      "step": 13,
+      "thought": "Waiting for human approval on 1 interview proposal(s)",
+      "action": "propose_interview",
+      "decision": "WAITING_FOR_HUMAN",
+      "observation": "Human approval required for 1 interview proposals:\n  - Priya Sharma: Monday 15:00-16:00\n\nAgent paused. Waiting for human decision..."
+    }
+  ],
+  "parsed_profiles": {
+    "Priya Sharma": {
+      "years_exp": 2.0,
+      "has_injection": false
+    },
+    "Rahul Verma": {
+      "years_exp": 2.0,
+      "has_injection": false
+    },
+    "Alex Johnson": {
+      "years_exp": 2.0,
+      "has_injection": true
+    }
+  }
+}
