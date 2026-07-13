@@ -38,3 +38,4 @@ class AgentState(BaseModel):
     next_action: str = "initialize"
     error: Optional[str] = None
     human_approval_pending: Optional[Dict[str, Any]] = None
+    human_approval_decisions: Optional[Dict[str, str]] = None  # candidate -> "Approved" | "Rejected"

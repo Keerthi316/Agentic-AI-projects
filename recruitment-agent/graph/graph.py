@@ -10,7 +10,8 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from graph.state import AgentState
 from graph.nodes import (
     initialize_node, plan_node, parse_resume_node, score_node,
-    finalize_node, check_availability_node, await_approval_node, complete_node
+    finalize_node, check_availability_node, await_approval_node,
+    resume_approval_node, complete_node
 )
 
 MAX_STEPS = 50
@@ -39,6 +40,7 @@ def router(state: AgentState) -> str:
         "finalize": "finalize",
         "check_availability": "check_availability",
         "await_approval": "await_approval",
+        "resume_approval": "resume_approval",
         "complete": "complete",
         "done": "__end__",
     }
@@ -60,6 +62,7 @@ def build_graph():
     workflow.add_node("finalize", finalize_node)
     workflow.add_node("check_availability", check_availability_node)
     workflow.add_node("await_approval", await_approval_node)
+    workflow.add_node("resume_approval", resume_approval_node)
     workflow.add_node("complete", complete_node)
     
     # Set entry point
@@ -67,7 +70,7 @@ def build_graph():
     
     # Add conditional edges from each node
     for node in ["initialize", "plan", "parse_resume", "score", "finalize",
-                 "check_availability", "await_approval", "complete"]:
+                 "check_availability", "await_approval", "resume_approval", "complete"]:
         workflow.add_conditional_edges(
             node,
             router,
@@ -79,6 +82,7 @@ def build_graph():
                 "finalize": "finalize",
                 "check_availability": "check_availability",
                 "await_approval": "await_approval",
+                "resume_approval": "resume_approval",
                 "complete": "complete",
                 "__end__": END,
             }
@@ -136,4 +140,42 @@ def run_sequential(job_description: str, candidates: dict) -> AgentState:
         state.status = "ERROR"
         state.error = f"Step limit exceeded ({MAX_STEPS} steps)"
     
+    return state
+
+
+def resume_after_approval(state: AgentState, decisions: dict) -> AgentState:
+    """
+    Resume agent execution after human approval.
+
+    Parameters
+    ----------
+    state      : The AgentState that was paused at WAITING_APPROVAL.
+    decisions  : dict mapping candidate name -> "Approved" | "Rejected"
+                 e.g. {"Alice": "Approved", "Bob": "Rejected"}
+
+    Returns the updated AgentState with status COMPLETED.
+    """
+    # Attach decisions so resume_approval_node can read them
+    state.human_approval_decisions = decisions
+    state.next_action = "resume_approval"
+    state.status = "RUNNING"
+
+    steps = 0
+    while steps < MAX_STEPS and state.status not in ["COMPLETED", "ERROR"]:
+        steps += 1
+        next_action = state.next_action
+
+        if next_action == "resume_approval":
+            state = resume_approval_node(state)
+        elif next_action == "complete":
+            state = complete_node(state)
+            break
+        elif next_action == "done":
+            state.status = "COMPLETED"
+            break
+        else:
+            state.status = "ERROR"
+            state.error = f"Unknown action during resume: {next_action}"
+            break
+
     return state

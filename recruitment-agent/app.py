@@ -15,7 +15,7 @@ from dotenv import load_dotenv
 load_dotenv()
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-from graph.graph import run_agent, run_sequential
+from graph.graph import run_agent, run_sequential, resume_after_approval
 from graph.state import AgentState
 
 
@@ -171,6 +171,8 @@ if "initialized" not in st.session_state:
     st.session_state.agent_status = "IDLE"
     st.session_state.current_step = 0
     st.session_state.current_candidate = ""
+    st.session_state.approval_decisions = {}   # candidate -> "Approved" | "Rejected"
+    st.session_state.approval_submitted = False
     st.session_state.initialized = True
 
 # ============================================================
@@ -250,6 +252,8 @@ with st.sidebar:
         st.session_state.agent_status = "IDLE"
         st.session_state.current_step = 0
         st.session_state.current_candidate = ""
+        st.session_state.approval_decisions = {}
+        st.session_state.approval_submitted = False
         st.rerun()
     
     # Status
@@ -424,20 +428,155 @@ if result:
     
     with tab3:
         st.markdown("### Interview Scheduling")
-        st.caption("Requires human approval")
-        if result.actions:
-            for action in result.actions:
-                is_pending = action.get("status") == "Pending Human Approval"
-                st.markdown(f"""
-                <div style="background:white;border-radius:12px;padding:1rem;box-shadow:0 1px 3px rgba(0,0,0,0.08);margin-bottom:0.5rem;">
-                    <div style="display:flex;align-items:center;justify-content:space-between;">
-                        <div><strong>{action.get('candidate', '')}</strong><br><span style="color:#6b7280;font-size:0.85rem;">📅 {action.get('slot', '')}</span></div>
-                        <span class="badge badge-{'pending' if is_pending else 'success'}">{action.get('status', '')}</span>
-                    </div>
-                </div>
-                """, unsafe_allow_html=True)
+        st.caption("Review and approve or reject each proposed interview slot.")
+
+        if not result.actions:
+            st.info("No interview proposals yet. The agent will generate proposals after evaluating candidates.")
         else:
-            st.info("No interview proposals yet.")
+            is_waiting = result.status == "WAITING_APPROVAL"
+            already_submitted = st.session_state.approval_submitted
+
+            if already_submitted:
+                # ── POST-APPROVAL: show final resolved statuses ──────────────────
+                st.success("✅ Approvals submitted. Interview schedule finalised.")
+                for action in result.actions:
+                    candidate = action.get("candidate", "Unknown")
+                    slot = action.get("slot", "")
+                    status = action.get("status", "")
+
+                    status_colors = {
+                        "Approved": "#10b981",
+                        "Rejected": "#ef4444",
+                        "Pending Human Approval": "#f59e0b",
+                    }
+                    badge_bg = {
+                        "Approved": "#d1fae5",
+                        "Rejected": "#fee2e2",
+                        "Pending Human Approval": "#fef3c7",
+                    }
+                    badge_color = status_colors.get(status, "#6b7280")
+                    bg = badge_bg.get(status, "#f3f4f6")
+
+                    st.markdown(f"""
+                    <div style="background:white;border-radius:12px;padding:1rem 1.25rem;
+                                box-shadow:0 1px 3px rgba(0,0,0,0.08);margin-bottom:0.6rem;
+                                border-left:4px solid {badge_color};">
+                        <div style="display:flex;align-items:center;justify-content:space-between;">
+                            <div>
+                                <strong style="font-size:1rem;">{candidate}</strong><br>
+                                <span style="color:#6b7280;font-size:0.85rem;">📅 {slot}</span>
+                            </div>
+                            <span style="background:{bg};color:{badge_color};padding:0.25rem 0.75rem;
+                                         border-radius:20px;font-size:0.75rem;font-weight:600;">
+                                {status}
+                            </span>
+                        </div>
+                    </div>
+                    """, unsafe_allow_html=True)
+
+            elif is_waiting:
+                # ── PRE-APPROVAL: interactive Approve / Reject buttons ───────────
+                st.warning("⏳ **Agent is paused — waiting for your approval decisions below.**")
+                st.markdown("---")
+
+                pending_actions = [a for a in result.actions if a.get("status") == "Pending Human Approval"]
+
+                # Per-proposal decision widgets
+                for action in pending_actions:
+                    candidate = action.get("candidate", "Unknown")
+                    slot = action.get("slot", "")
+                    current_decision = st.session_state.approval_decisions.get(candidate, None)
+
+                    # Colour the card based on current in-page selection
+                    border_color = "#d1d5db"
+                    if current_decision == "Approved":
+                        border_color = "#10b981"
+                    elif current_decision == "Rejected":
+                        border_color = "#ef4444"
+
+                    st.markdown(f"""
+                    <div style="background:white;border-radius:12px;padding:1rem 1.25rem;
+                                box-shadow:0 1px 3px rgba(0,0,0,0.08);margin-bottom:0.3rem;
+                                border:2px solid {border_color};">
+                        <strong style="font-size:1rem;">{candidate}</strong><br>
+                        <span style="color:#6b7280;font-size:0.85rem;">📅 {slot}</span>
+                    </div>
+                    """, unsafe_allow_html=True)
+
+                    col_approve, col_reject, col_status = st.columns([1, 1, 3])
+                    with col_approve:
+                        if st.button("✅ Approve", key=f"approve_{candidate}", use_container_width=True,
+                                     type="primary" if current_decision == "Approved" else "secondary"):
+                            st.session_state.approval_decisions[candidate] = "Approved"
+                            st.rerun()
+                    with col_reject:
+                        if st.button("❌ Reject", key=f"reject_{candidate}", use_container_width=True,
+                                     type="primary" if current_decision == "Rejected" else "secondary"):
+                            st.session_state.approval_decisions[candidate] = "Rejected"
+                            st.rerun()
+                    with col_status:
+                        if current_decision:
+                            color = "#10b981" if current_decision == "Approved" else "#ef4444"
+                            st.markdown(f"<span style='color:{color};font-weight:600;'>→ {current_decision}</span>",
+                                        unsafe_allow_html=True)
+                        else:
+                            st.markdown("<span style='color:#9ca3af;'>No decision yet</span>",
+                                        unsafe_allow_html=True)
+
+                    st.markdown("<div style='height:0.5rem;'></div>", unsafe_allow_html=True)
+
+                # Summary + submit
+                st.markdown("---")
+                decided = len(st.session_state.approval_decisions)
+                total_pending = len(pending_actions)
+                undecided = total_pending - decided
+
+                col_info, col_submit = st.columns([3, 1])
+                with col_info:
+                    approved_n = sum(1 for v in st.session_state.approval_decisions.values() if v == "Approved")
+                    rejected_n = sum(1 for v in st.session_state.approval_decisions.values() if v == "Rejected")
+                    st.markdown(
+                        f"**{decided}/{total_pending}** decided &nbsp;·&nbsp; "
+                        f"<span style='color:#10b981;'>✅ {approved_n} Approved</span> &nbsp;·&nbsp; "
+                        f"<span style='color:#ef4444;'>❌ {rejected_n} Rejected</span>"
+                        + (f" &nbsp;·&nbsp; <span style='color:#9ca3af;'>⏳ {undecided} Pending</span>" if undecided else ""),
+                        unsafe_allow_html=True
+                    )
+                with col_submit:
+                    all_decided = undecided == 0
+                    if st.button("Submit Decisions", type="primary", use_container_width=True,
+                                 disabled=not all_decided,
+                                 help="Decide all proposals before submitting" if not all_decided else ""):
+                        # Resume agent with the decisions
+                        with st.spinner("Resuming agent with your decisions..."):
+                            updated_state = resume_after_approval(
+                                result,
+                                st.session_state.approval_decisions
+                            )
+                        st.session_state.agent_result = updated_state
+                        st.session_state.agent_status = updated_state.status
+                        st.session_state.current_step = updated_state.step_count
+                        st.session_state.approval_submitted = True
+                        st.rerun()
+
+            else:
+                # ── COMPLETED (agent already ran through to the end) ─────────────
+                for action in result.actions:
+                    candidate = action.get("candidate", "Unknown")
+                    slot = action.get("slot", "")
+                    status = action.get("status", "Pending Human Approval")
+                    is_pending = status == "Pending Human Approval"
+                    badge_class = "badge-pending" if is_pending else "badge-interview"
+                    st.markdown(f"""
+                    <div style="background:white;border-radius:12px;padding:1rem;
+                                box-shadow:0 1px 3px rgba(0,0,0,0.08);margin-bottom:0.5rem;">
+                        <div style="display:flex;align-items:center;justify-content:space-between;">
+                            <div><strong>{candidate}</strong><br>
+                                 <span style="color:#6b7280;font-size:0.85rem;">📅 {slot}</span></div>
+                            <span class="badge {badge_class}">{status}</span>
+                        </div>
+                    </div>
+                    """, unsafe_allow_html=True)
 else:
     st.info("👆 Run the agent to view results")
 

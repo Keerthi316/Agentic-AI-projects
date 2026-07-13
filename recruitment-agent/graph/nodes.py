@@ -414,6 +414,47 @@ def finalize_node(state: AgentState) -> AgentState:
     return state
 
 
+def resume_approval_node(state: AgentState) -> AgentState:
+    """
+    Process human approval decisions and update action statuses.
+    
+    Expects state.human_approval_decisions to be a dict mapping
+    candidate name -> "Approved" | "Rejected".
+    """
+    decisions = getattr(state, "human_approval_decisions", None) or {}
+    
+    approved_count = 0
+    rejected_count = 0
+    
+    for action in state.actions:
+        candidate = action.get("candidate", "")
+        decision = decisions.get(candidate)
+        if decision == "Approved":
+            action["status"] = "Approved"
+            approved_count += 1
+        elif decision == "Rejected":
+            action["status"] = "Rejected"
+            rejected_count += 1
+        # Leave untouched if no decision was provided
+    
+    # Clear the pending approval gate
+    state.human_approval_pending = None
+    state.status = "RUNNING"
+    
+    state = _append_trajectory(
+        state,
+        f"Processing human approval decisions: {approved_count} approved, {rejected_count} rejected",
+        "resume_approval",
+        {"decisions": decisions},
+        f"Actions updated. Approved={approved_count}, Rejected={rejected_count}, "
+        f"Unchanged={len(state.actions) - approved_count - rejected_count}.",
+        "APPROVAL_PROCESSED"
+    )
+    
+    state.next_action = "complete"
+    return state
+
+
 def complete_node(state: AgentState) -> AgentState:
     """Finalize the agent execution."""
     state.status = "COMPLETED" if state.status != "WAITING_APPROVAL" else state.status
