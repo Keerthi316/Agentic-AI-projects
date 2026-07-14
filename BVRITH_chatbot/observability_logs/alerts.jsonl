@@ -1,0 +1,2 @@
+{"alert_type": "latency", "severity": "critical", "message": "Latency 14.72s exceeded threshold 10.0s.", "value": 14.72, "threshold": 10.0, "timestamp": "2026-07-14T05:27:45.358945+00:00"}
+{"alert_type": "latency", "severity": "critical", "message": "Latency 15.27s exceeded threshold 10.0s.", "value": 15.27, "threshold": 10.0, "timestamp": "2026-07-14T05:49:08.611792+00:00"}

@@ -20,6 +20,18 @@ from chatbot import CollegeChatbot
 from prompts import SUGGESTED_QUESTIONS
 from memory import MemoryManager
 
+# ── Observability imports (graceful fallback if not installed yet) ──────────
+try:
+    from observability.session_stats import SessionStats
+    from observability.alerts import alert_engine
+    from observability.ab_testing import ab_test_manager
+    from observability.log_analyzer import LogAnalyzer
+    OBSERVABILITY_AVAILABLE = True
+except ImportError:
+    OBSERVABILITY_AVAILABLE = False
+    logger = logging.getLogger(__name__)
+    logger.warning("observability/ module not found — stats sidebar disabled.")
+
 # Configure logging
 logging.basicConfig(
     level=logging.INFO,
@@ -179,6 +191,11 @@ def initialize_session_state() -> None:
         st.session_state.show_memory_panel = False
         st.session_state.memory_count = 0
         st.session_state.total_memory_count = 0
+        # ── Observability state ──
+        if OBSERVABILITY_AVAILABLE:
+            st.session_state.session_stats = SessionStats()
+            st.session_state.obs_alerts = []      # active alert list for UI
+            st.session_state.show_stats = True
 
 
 def initialize_vector_store() -> None:
@@ -388,6 +405,69 @@ def render_sidebar() -> None:
 
         st.divider()
 
+        # ── 📊 Session Stats (Observability) ──────────────────────────────
+        if OBSERVABILITY_AVAILABLE and hasattr(st.session_state, "session_stats"):
+            st.subheader("📊 Session Stats")
+            stats = st.session_state.session_stats
+
+            col_a, col_b = st.columns(2)
+            with col_a:
+                st.metric("Queries", stats.total_queries)
+                st.metric("Avg Latency", f"{stats.avg_latency:.2f}s")
+                st.metric("P95 Latency", f"{stats.p95_latency:.2f}s")
+            with col_b:
+                st.metric("Total Cost", f"${stats.total_cost_usd:.5f}")
+                st.metric("Total Tokens", stats.total_tokens)
+                st.metric("Errors", stats.error_count)
+
+            # Active alerts (latency / cost / error-rate breaches)
+            if st.session_state.get("obs_alerts"):
+                st.markdown("**⚠️ Active Alerts:**")
+                for alert in st.session_state.obs_alerts[-5:]:  # show last 5
+                    severity_icon = "🔴" if alert.severity == "critical" else "🟡"
+                    st.markdown(
+                        f'<div style="background:rgba(255,100,100,0.08);padding:0.3rem 0.5rem;'
+                        f'border-radius:0.4rem;font-size:0.78rem;margin-bottom:0.2rem;">'
+                        f'{severity_icon} {alert.message}</div>',
+                        unsafe_allow_html=True,
+                    )
+
+            # A/B version counts
+            if hasattr(ab_test_manager, "get_version_counts"):
+                ab_counts = ab_test_manager.get_version_counts()
+                st.caption(
+                    f"A/B calls — v1: {ab_counts.get('v1', 0)} | v2: {ab_counts.get('v2', 0)}"
+                )
+
+            col_rst, col_log = st.columns(2)
+            with col_rst:
+                if st.button("↺ Reset Stats", use_container_width=True, key="reset_stats"):
+                    stats.reset()
+                    st.session_state.obs_alerts = []
+                    st.rerun()
+            with col_log:
+                if st.button("🔍 Analyze Logs", use_container_width=True, key="analyze_logs"):
+                    with st.spinner("Analyzing…"):
+                        report = LogAnalyzer().analyze()
+                    st.session_state.log_analysis = report
+                    st.rerun()
+
+            # Show log analysis results if available
+            if st.session_state.get("log_analysis"):
+                with st.expander("📋 Log Analysis", expanded=False):
+                    rep = st.session_state.log_analysis
+                    st.write(f"**Records analysed:** {rep['total_records']}")
+                    if rep.get("anomalies"):
+                        st.write(f"**Anomalies:** {len(rep['anomalies'])}")
+                        for a in rep["anomalies"][:5]:
+                            st.write(f"• {a['detail']}")
+                    st.write("**Suggestions:**")
+                    for s in rep.get("suggestions", []):
+                        st.write(s)
+
+        # ── Clear Chat Button ──────────────────────────────────────────────
+        st.divider()
+
         # Clear Chat Button
         if st.button(
             "🗑️ Clear Chat",
@@ -531,16 +611,50 @@ def handle_user_input(user_question: str) -> None:
     Args:
         user_question (str): The user's question text.
     """
+    # ── 1. Input validation (observability alert check) ───────────────────
+    if OBSERVABILITY_AVAILABLE:
+        ok, input_alert = alert_engine.validate_input(user_question)
+        if not ok:
+            st.session_state.obs_alerts.append(input_alert)
+            st.session_state.messages.append({
+                "role": "user",
+                "content": user_question[:200] + "…",
+            })
+            st.session_state.messages.append({
+                "role": "assistant",
+                "content": (
+                    f"⚠️ Your message is too long ({len(user_question)} characters). "
+                    f"Please shorten it to under 2,000 characters and try again."
+                ),
+                "citations": [], "retrieved_chunks": [],
+                "response_time": "0.00s", "chunk_count": 0, "confidence": 0,
+            })
+            return
+
+    # ── 2. A/B prompt variant assignment ─────────────────────────────────
+    prompt_version = "v1"
+    if OBSERVABILITY_AVAILABLE:
+        prompt_version, _ = ab_test_manager.assign_variant()
+        # Inject prompt version into chatbot so it can pass to logger
+        if st.session_state.chatbot:
+            st.session_state.chatbot._ab_prompt_version = prompt_version
+
     # Add user message to history
     st.session_state.messages.append({
         "role": "user",
         "content": user_question,
     })
 
+    # ── 3. Start observability call tracking ──────────────────────────────
+    import time as _time
+    call_start = _time.time()
+
     try:
         # Generate answer
         response = st.session_state.chatbot.answer_question(user_question)
         answer_text = response["answer"]
+        call_success = True
+        call_error = ""
 
         # Extract citations
         import re
@@ -576,26 +690,74 @@ def handle_user_input(user_question: str) -> None:
             )
 
     except ValueError as e:
+        call_success = False
+        call_error = str(e)
+        answer_text = f"⚠️ {str(e)}"
+        citations = []
+        response = {"response_time": "0.01s", "chunk_count": 0, "confidence": 0,
+                    "routing": "Error", "tool_debug": {}, "memories_used": 0, "memories_stored": 0}
         st.session_state.messages.append({
             "role": "assistant",
-            "content": f"⚠️ {str(e)}",
-            "citations": [],
-            "retrieved_chunks": [],
-            "response_time": "0.01s",
-            "chunk_count": 0,
-            "confidence": 0,
+            "content": answer_text,
+            "citations": [], "retrieved_chunks": [],
+            "response_time": "0.01s", "chunk_count": 0, "confidence": 0,
         })
     except Exception as e:
+        call_success = False
+        call_error = str(e)
+        answer_text = f"⚠️ An error occurred: {str(e)}"
+        citations = []
+        response = {"response_time": "0.01s", "chunk_count": 0, "confidence": 0,
+                    "routing": "Error", "tool_debug": {}, "memories_used": 0, "memories_stored": 0}
         logger.exception("Error generating response.")
         st.session_state.messages.append({
             "role": "assistant",
-            "content": f"⚠️ An error occurred: {str(e)}",
-            "citations": [],
-            "retrieved_chunks": [],
-            "response_time": "0.01s",
-            "chunk_count": 0,
-            "confidence": 0,
+            "content": answer_text,
+            "citations": [], "retrieved_chunks": [],
+            "response_time": "0.01s", "chunk_count": 0, "confidence": 0,
         })
+
+    # ── 4. Record observability metrics ───────────────────────────────────
+    if OBSERVABILITY_AVAILABLE:
+        call_latency = _time.time() - call_start
+        # Parse latency number from response_time string (e.g. "1.23s" → 1.23)
+        try:
+            rt_str = response.get("response_time", "0s")
+            latency_val = float(rt_str.rstrip("s")) if isinstance(rt_str, str) else call_latency
+        except (ValueError, AttributeError):
+            latency_val = call_latency
+
+        # Estimate token count & cost (rough: use session_stats + llm_logger)
+        est_tokens = max(50, len(user_question) // 4 + len(answer_text) // 4)
+        est_cost = est_tokens / 1_000_000 * 0.6   # GPT-4o-mini output rate approx
+
+        # Update session stats
+        stats = st.session_state.session_stats
+        stats.record(
+            latency=latency_val,
+            tokens=est_tokens,
+            cost=est_cost,
+            success=call_success,
+        )
+
+        # Check per-call thresholds
+        new_alerts = alert_engine.check_call(latency=latency_val, cost=est_cost)
+        new_alerts += alert_engine.check_session(error_rate=stats.error_rate)
+        st.session_state.obs_alerts.extend(new_alerts)
+
+        # Record A/B result
+        is_refusal = any(
+            p in answer_text.lower()
+            for p in ["i can only answer", "i don't have information", "outside my scope"]
+        )
+        ab_test_manager.record_result(
+            version=prompt_version,
+            latency=latency_val,
+            cost=est_cost,
+            refusal=is_refusal,
+            citations=citations,
+            success=call_success,
+        )
 
 
 # ──────────────────────────────────────────────

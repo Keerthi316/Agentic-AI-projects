@@ -24,6 +24,14 @@ from prompts import ANSWER_PROMPT
 from tools import TOOLS, execute_tool
 from memory import MemoryManager
 
+# ── Observability: LLM call logger (graceful fallback) ──────────────────────
+try:
+    from observability.llm_logger import llm_logger as _llm_logger
+    _LOGGING_ENABLED = True
+except ImportError:
+    _llm_logger = None  # type: ignore[assignment]
+    _LOGGING_ENABLED = False
+
 logger = logging.getLogger(__name__)
 
 # ──────────────────────────────────────────────
@@ -269,8 +277,41 @@ class CollegeChatbot:
 
             # Step 6: First LLM call — may return tool_calls or direct answer
             try:
+                # ── Observability: start call tracking ──
+                _prompt_version = getattr(self, "_ab_prompt_version", "v1")
+                _input_text = str(messages[-1].content) if messages else ""
+                _call_id = (
+                    _llm_logger.start_call(
+                        question=question,
+                        model=self.llm.model_name,
+                        prompt_version=_prompt_version,
+                        input_text=_input_text,
+                    )
+                    if _LOGGING_ENABLED
+                    else None
+                )
+
                 response = self.llm.invoke(messages, tools=TOOLS)
+
+                # ── Observability: end call tracking (success) ──
+                if _LOGGING_ENABLED and _call_id:
+                    _llm_logger.end_call(
+                        call_id=_call_id,
+                        output_text=str(getattr(response, "content", "")),
+                        success=True,
+                        routing="pending",          # updated below after routing is resolved
+                        confidence=max_score,
+                    )
+
             except Exception as e:
+                # ── Observability: end call tracking (failure) ──
+                if _LOGGING_ENABLED and _call_id:
+                    _llm_logger.end_call(
+                        call_id=_call_id,
+                        output_text="",
+                        success=False,
+                        error_message=str(e),
+                    )
                 logger.error(f"LLM invocation failed: {e}")
                 answer = (
                     "I encountered an error while processing your question. "
@@ -351,10 +392,38 @@ class CollegeChatbot:
                 )
 
                 try:
+                    # ── Observability: log final tool-answer call ──
+                    _final_input = str(final_messages[-1].content) if final_messages else ""
+                    _final_call_id = (
+                        _llm_logger.start_call(
+                            question=question,
+                            model=self.llm.model_name,
+                            prompt_version=_prompt_version,
+                            input_text=_final_input,
+                        )
+                        if _LOGGING_ENABLED
+                        else None
+                    )
                     final_response = self.llm.invoke(final_messages)
                     answer = final_response.content
+                    if _LOGGING_ENABLED and _final_call_id:
+                        _llm_logger.end_call(
+                            call_id=_final_call_id,
+                            output_text=answer,
+                            success=True,
+                            routing=routing,
+                            confidence=max_score,
+                            citations=[],
+                        )
                 except Exception as e:
                     logger.error(f"Final LLM invocation failed: {e}")
+                    if _LOGGING_ENABLED and _final_call_id:
+                        _llm_logger.end_call(
+                            call_id=_final_call_id,
+                            output_text="",
+                            success=False,
+                            error_message=str(e),
+                        )
                     # Fallback: use tool output directly
                     answer_parts = [tr["tool_output"] for tr in tool_results]
                     answer = "\n\n".join(answer_parts)
@@ -364,6 +433,28 @@ class CollegeChatbot:
                 routing = "RAG"
                 logger.info(f"Routing: ✓ {routing}")
                 self.last_tool_debug = {"routing": routing}
+
+                # ── Observability: log the RAG-only answer ──────────────────
+                if _LOGGING_ENABLED:
+                    _rag_citations = re.findall(r'\[(.*?)\]', answer)
+                    _rag_call_id = _llm_logger.start_call(
+                        question=question,
+                        model=self.llm.model_name,
+                        prompt_version=_prompt_version,
+                        input_text=answer[:300],
+                    )
+                    _llm_logger.end_call(
+                        call_id=_rag_call_id,
+                        output_text=answer,
+                        success=True,
+                        routing=routing,
+                        confidence=max_score,
+                        citations=_rag_citations,
+                        refusal=any(
+                            p in answer.lower()
+                            for p in ["i can only answer", "i couldn't find", "outside my scope"]
+                        ),
+                    )
 
                 # Step 9: Add conversational polish
             answer = self._polish_answer(answer, question)
