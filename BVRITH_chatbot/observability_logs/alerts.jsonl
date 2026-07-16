@@ -1,0 +1,12 @@
+{"alert_type": "latency", "severity": "critical", "message": "Latency 14.72s exceeded threshold 10.0s.", "value": 14.72, "threshold": 10.0, "timestamp": "2026-07-14T05:27:45.358945+00:00"}
+{"alert_type": "latency", "severity": "critical", "message": "Latency 15.27s exceeded threshold 10.0s.", "value": 15.27, "threshold": 10.0, "timestamp": "2026-07-14T05:49:08.611792+00:00"}
+{"alert_type": "latency", "severity": "critical", "message": "Latency 19.75s exceeded threshold 10.0s.", "value": 19.75, "threshold": 10.0, "timestamp": "2026-07-14T17:42:04.601419+00:00"}
+{"alert_type": "latency", "severity": "critical", "message": "Latency 10.16s exceeded threshold 10.0s.", "value": 10.16, "threshold": 10.0, "timestamp": "2026-07-14T17:47:12.431765+00:00"}
+{"alert_type": "latency", "severity": "critical", "message": "Latency 22.78s exceeded threshold 10.0s.", "value": 22.78, "threshold": 10.0, "timestamp": "2026-07-14T17:47:45.483517+00:00"}
+{"alert_type": "latency", "severity": "critical", "message": "Latency 15.22s exceeded threshold 10.0s.", "value": 15.22, "threshold": 10.0, "timestamp": "2026-07-14T17:48:23.413638+00:00"}
+{"alert_type": "latency", "severity": "critical", "message": "Latency 21.19s exceeded threshold 10.0s.", "value": 21.19, "threshold": 10.0, "timestamp": "2026-07-14T18:05:45.713553+00:00"}
+{"alert_type": "latency", "severity": "critical", "message": "Latency 24.97s exceeded threshold 10.0s.", "value": 24.97, "threshold": 10.0, "timestamp": "2026-07-14T18:15:26.132576+00:00"}
+{"alert_type": "latency", "severity": "critical", "message": "Latency 40.87s exceeded threshold 10.0s.", "value": 40.87, "threshold": 10.0, "timestamp": "2026-07-14T18:16:46.711571+00:00"}
+{"alert_type": "latency", "severity": "critical", "message": "Latency 18.93s exceeded threshold 10.0s.", "value": 18.93, "threshold": 10.0, "timestamp": "2026-07-14T18:17:13.497521+00:00"}
+{"alert_type": "latency", "severity": "critical", "message": "Latency 11.00s exceeded threshold 10.0s.", "value": 11.0, "threshold": 10.0, "timestamp": "2026-07-14T18:25:52.484488+00:00"}
+{"alert_type": "error_rate", "severity": "critical", "message": "Session error rate 33.3% exceeded threshold 5.0%.", "value": 0.3333, "threshold": 0.05, "timestamp": "2026-07-14T18:25:58.170504+00:00"}
